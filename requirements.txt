@@ -1,0 +1,4 @@
+GlamMonitor==1.0.0
+requests
+DateTime~=5.2
+py7zr~=0.20.6
