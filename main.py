@@ -69,29 +69,32 @@ def execute_backup():
             network_user = os.environ['NETWORK_USER']
             network_pwd = os.environ['NETWORK_PWD']
             mirror_folder = os.environ['NETWORK_MIRROR_RELATIVE_PATH']
+            network_volume = 'X'
+            if os.environ.__contains__('NETWORK_PATH_VOLUME') and len(os.environ['NETWORK_PATH_VOLUME']) == 1:
+                network_volume = os.environ['NETWORK_PATH_VOLUME']
 
-            monitor.info(f'Mount {network_path} as X:')
-            command = f'net use X: {network_path} /user:{network_user} {network_pwd}'
+            monitor.info(f'Mount {network_path} as {network_volume}')
+            command = f'net use {network_volume}: {network_path} /user:{network_user} {network_pwd}'
             subprocess.run(command, shell=True, check=False)
 
-            if not os.path.exists(f"X:\\{mirror_folder}"):
-                monitor.info(f'Directory X:\\{mirror_folder} not existing. Creating..')
-                os.makedirs(f"X:\\{mirror_folder}")
+            if not os.path.exists(f"{network_volume}:\\{mirror_folder}"):
+                monitor.info(f'Directory {network_volume}:\\{mirror_folder} not existing. Creating..')
+                os.makedirs(f"{network_volume}:\\{mirror_folder}")
 
-            monitor.info(f'Mirror backups directory to X:\\{mirror_folder}')
-            command = f'robocopy "{destination_backup_folder}" X:\\{mirror_folder} /MIR'
+            monitor.info(f'Mirror backups directory to {network_volume}:\\{mirror_folder}')
+            command = f'robocopy "{destination_backup_folder}" {network_volume}:\\{mirror_folder} /MIR'
             subprocess.run(command, shell=True, check=False)
 
             monitor.info('Check copied files')
             mirror_files = [f for f in os.listdir(destination_backup_folder) if f.endswith(f'.7z')]
 
             for local_backup in mirror_files:
-                mirror_backup = os.path.join(f'X:\\{mirror_folder}', local_backup)
+                mirror_backup = os.path.join(f'{network_volume}:\\{mirror_folder}', local_backup)
                 if not os.path.exists(mirror_backup):
                     monitor.error(f'Backup file {local_backup} does not exist')
 
-            monitor.info(f'Unmount X:')
-            command = 'net use X: /delete'
+            monitor.info(f'Unmount {network_volume}:')
+            command = f'net use {network_volume}: /delete'
             subprocess.run(command, shell=True, check=False)
         else:
             monitor.info('Network  path not defined')
